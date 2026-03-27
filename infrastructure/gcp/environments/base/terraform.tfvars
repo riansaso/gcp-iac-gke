@@ -1,5 +1,5 @@
 # GCP Configuration
-# IMPORTANT: Replace YOUR_PROJECT_ID with your actual GCP project ID
+# IMPORTANT: Replace pj-gcp-mvp1 with your actual GCP project ID
 project_id   = "pj-gcp-mvp1"
 region       = "us-central1"
 project_name = "Testia"

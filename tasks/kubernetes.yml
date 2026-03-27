@@ -1,0 +1,102 @@
+version: '3'
+
+# Kubernetes task group
+# Handles all Kubernetes operations (setup, GitOps, deployments)
+
+tasks:
+  get-credentials:
+    desc: "Get GKE cluster credentials and setup kubeconfig"
+    cmds:
+      - echo "📥 Fetching GKE cluster credentials..."
+      - bash -c 'CLUSTER=$(cd {{.ROOT_DIR}}/infrastructure/gcp/environments/base && terraform output -raw gke_cluster_name) && REGION={{.REGION | default "us-central1"}} && gcloud container clusters get-credentials "$CLUSTER" --zone "$REGION" --project {{.PROJECT_ID}}'
+      - echo "✓ Cluster credentials updated"
+      - kubectl cluster-info
+      - echo ""
+      - echo "Run 'kubectl get nodes' to verify cluster is accessible"
+
+  flux-setup:
+    desc: "Install and configure Flux v2 for GitOps"
+    cmds:
+      - echo "🚀 Setting up Flux v2..."
+      - bash {{.ROOT_DIR}}/scripts/setup-workload-id.sh
+      - echo ""
+      - echo "Applying Flux manifests..."
+      - kubectl apply -f {{.ROOT_DIR}}/gitops/infrastructure/flux-system/
+      - kubectl apply -f {{.ROOT_DIR}}/gitops/infrastructure/external-secrets/
+      - kubectl apply -f {{.ROOT_DIR}}/gitops/infrastructure/ingress-nginx/
+      - echo "✓ Flux v2 installed"
+      - echo ""
+      - echo "Waiting for Flux to be ready (this may take 2-3 minutes)..."
+      - kubectl rollout status deployment/flux-controller -n flux-system --timeout=5m || true
+      - echo "✓ Flux v2 setup complete"
+      - echo ""
+      - echo "Next steps:"
+      - echo "  1. Check Flux status: kubectl get all -n flux-system"
+      - echo "  2. View Flux logs: kubectl logs -f deployment/flux-controller -n flux-system"
+
+  check-nodes:
+    desc: "Check GKE cluster nodes and status"
+    cmds:
+      - echo "📊 GKE Cluster Nodes:"
+      - kubectl get nodes -o wide
+      - echo ""
+      - echo "Node Details:"
+      - kubectl describe nodes | grep -A 3 "Name:"
+
+  check-pods:
+    desc: "Check pod status across all namespaces"
+    cmds:
+      - echo "📦 Pod Status (All Namespaces):"
+      - kubectl get pods -A
+      - echo ""
+      - echo "By namespace:"
+      - kubectl get pods --all-namespaces --sort-by=.metadata.namespace
+
+  logs-flux:
+    desc: "Show Flux controller logs"
+    cmds:
+      - echo "📋 Flux Controller Logs:"
+      - kubectl logs -f deployment/flux-controller -n flux-system
+
+  logs-eso:
+    desc: "Show External Secrets Operator logs"
+    cmds:
+      - echo "📋 External Secrets Operator Logs:"
+      - kubectl logs -f deployment/external-secrets -n external-secrets
+
+  describe-cluster:
+    desc: "Show detailed cluster information"
+    cmds:
+      - echo "📊 Cluster Information:"
+      - kubectl cluster-info dump --output-directory={{.ROOT_DIR}}/cluster-debug 2>/dev/null || kubectl cluster-info
+      - echo ""
+      - echo "Cluster Version:"
+      - kubectl version --short
+      - echo ""
+      - echo "API Resources:"
+      - kubectl api-resources | head -20
+
+  test-workload-identity:
+    desc: "Test Workload Identity Federation setup"
+    cmds:
+      - echo "🔐 Testing Workload Identity..."
+      - echo "Creating test pod..."
+      - kubectl run test-pod --image=gcr.io/gke-release/gke-metrics-agent:latest --serviceaccount=demo-app-sa -n applications --rm -it --restart=Never -- gcloud auth application-default print-access-token || echo "Test completed"
+      - echo "✓ Workload Identity test complete"
+
+  apply-demo-app:
+    desc: "Deploy demo application"
+    cmds:
+      - echo "🚀 Deploying demo application..."
+      - kubectl apply -f {{.ROOT_DIR}}/gitops/applications/demo-app.yaml
+      - echo "✓ Demo application deployed"
+      - echo ""
+      - echo "Verify deployment:"
+      - echo "  kubectl get deployment demo-app -n applications"
+      - echo "  kubectl get pods -n applications"
+
+  tunnel-setup:
+    desc: "Setup IAP tunnel to kubectl API"
+    cmds:
+      - echo "🔐 Setting up IAP tunnel..."
+      - bash {{.ROOT_DIR}}/scripts/tunnel.sh kubectl

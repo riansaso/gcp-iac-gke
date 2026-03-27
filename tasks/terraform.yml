@@ -1,0 +1,99 @@
+version: '3'
+
+# Terraform task group
+# Handles all Terraform operations (init, plan, apply, destroy, validate)
+
+tasks:
+  init:
+    desc: "Initialize Terraform backend and modules"
+    dir: "{{.ROOT_DIR}}/infrastructure/gcp/environments/base"
+    cmds:
+      - echo "🔧 Initializing Terraform..."
+      - terraform init -upgrade
+      - echo "✓ Terraform initialized"
+
+  validate:
+    desc: "Validate Terraform configuration"
+    dir: "{{.ROOT_DIR}}/infrastructure/gcp/environments/base"
+    cmds:
+      - echo "🔍 Validating Terraform configuration..."
+      - terraform validate
+      - echo "✓ Terraform configuration is valid"
+
+  fmt-check:
+    desc: "Check Terraform formatting"
+    dir: "{{.ROOT_DIR}}/infrastructure/gcp/environments/base"
+    cmds:
+      - echo "📝 Checking Terraform formatting..."
+      - terraform fmt -check -recursive {{.ROOT_DIR}}/infrastructure
+      - echo "✓ Terraform formatting is correct"
+
+  fmt:
+    desc: "Format all Terraform files"
+    dir: "{{.ROOT_DIR}}/infrastructure/gcp/environments/base"
+    cmds:
+      - echo "📝 Formatting Terraform files..."
+      - terraform fmt -recursive {{.ROOT_DIR}}/infrastructure
+      - echo "✓ Terraform files formatted"
+
+  plan:
+    desc: "Plan infrastructure changes"
+    dir: "{{.ROOT_DIR}}/infrastructure/gcp/environments/base"
+    deps:
+      - validate
+    cmds:
+      - echo "📋 Planning infrastructure changes..."
+      - terraform plan -out=tfplan
+      - echo ""
+      - echo "✓ Plan saved to tfplan"
+      - echo "Review the plan and run 'task tf:apply' to apply changes"
+
+  apply:
+    desc: "Apply infrastructure changes"
+    dir: "{{.ROOT_DIR}}/infrastructure/gcp/environments/base"
+    deps:
+      - init
+      - validate
+    cmds:
+      - echo "⚙️ Applying infrastructure changes..."
+      - echo "This may take 10-20 minutes (GKE cluster creation takes time)"
+      - terraform apply -auto-approve
+      - echo "✓ Infrastructure applied successfully"
+      - echo ""
+      - echo "Next steps:"
+      - echo "  1. Run: task k8s:get-credentials"
+      - echo "  2. Run: task k8s:flux-setup"
+
+  destroy:
+    desc: "Destroy all infrastructure (DESTRUCTIVE - use with caution)"
+    dir: "{{.ROOT_DIR}}/infrastructure/gcp/environments/base"
+    cmds:
+      - echo "⚠️  WARNING: This will destroy all infrastructure!"
+      - echo "Type 'yes' if you want to continue:"
+      - bash -c 'read -p ""> answer; if [ "$answer" != "yes" ]; then exit 1; fi'
+      - echo "🗑️  Destroying infrastructure..."
+      - terraform destroy -auto-approve
+      - echo "✓ Infrastructure destroyed"
+
+  output:
+    desc: "Show Terraform outputs"
+    dir: "{{.ROOT_DIR}}/infrastructure/gcp/environments/base"
+    cmds:
+      - echo "📊 Terraform Outputs:"
+      - terraform output
+
+  state:
+    desc: "Show Terraform state summary"
+    dir: "{{.ROOT_DIR}}/infrastructure/gcp/environments/base"
+    cmds:
+      - echo "📊 Terraform State:"
+      - terraform show -json | jq '.values.root_module.resources | length' 2>/dev/null || terraform state list | wc -l
+      - echo "resources managed"
+
+  refresh:
+    desc: "Refresh Terraform state"
+    dir: "{{.ROOT_DIR}}/infrastructure/gcp/environments/base"
+    cmds:
+      - echo "🔄 Refreshing Terraform state..."
+      - terraform refresh
+      - echo "✓ State refreshed"

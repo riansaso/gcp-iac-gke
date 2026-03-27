@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-nginx
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: ingress-nginx
+      sourceRef:
+        kind: HelmRepository
+        name: ingress-nginx
+        namespace: ingress-nginx
+      version: "4.8.*"
+  values:
+    controller:
+      kind: Deployment
+      replicas: 3
+      service:
+        type: LoadBalancer
+        externalTrafficPolicy: Local
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 1000m
+          memory: 512Mi
+      autoscaling:
+        enabled: true
+        minReplicas: 3
+        maxReplicas: 10
+        targetCPUUtilizationPercentage: 80
+        targetMemoryUtilizationPercentage: 80
+      # Enable Workload Identity annotation
+      serviceAccount:
+        create: true
+        annotations:
+          iam.gke.io/gcp-service-account: ingress-nginx-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com
+      # Security context
+      podSecurityContext:
+        fsGroup: 2000
+        runAsNonRoot: true
+        runAsUser: 33
+      securityContext:
+        allowPrivilegeEscalation: true
+        capabilities:
+          drop:
+          - ALL
+          add:
+          - NET_BIND_SERVICE
+        readOnlyRootFilesystem: true
+      # Enable access logs
+      config:
+        enable-access-logs: "true"
+        keep-alive: "30"
+        upstream-keepalive-connections: "32"
+      # Pod disruption budget
+      podDisruptionBudget:
+        minAvailable: 1
+    defaultBackend:
+      enabled: true
+      image:
+        repository: k8s.gcr.io/defaultbackend-amd64
+        tag: "1.5"
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+spec:
+  interval: 10m
+  url: https://kubernetes.github.io/ingress-nginx

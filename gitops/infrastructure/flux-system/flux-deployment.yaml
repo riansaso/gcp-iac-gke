@@ -1,0 +1,126 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flux-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flux-system
+  namespace: flux-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: flux-system
+rules:
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: flux-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: flux-system
+subjects:
+- kind: ServiceAccount
+  name: flux-system
+  namespace: flux-system
+---
+# NOTE: This is a minimal Flux v2 deployment.
+# For full installation with all controllers, use: flux install --namespace=flux-system
+# Or use the helm chart from https://fluxcd.io/docs/installation/
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flux-controller
+  namespace: flux-system
+  labels:
+    app: flux-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flux-controller
+  template:
+    metadata:
+      labels:
+        app: flux-controller
+      annotations:
+        iam.gke.io/gcp-service-account: flux-system-sa@YOUR_PROJECT_ID.iam.gserviceaccount.com
+    spec:
+      serviceAccountName: flux-system
+      containers:
+      - name: source-controller
+        image: ghcr.io/fluxcd/source-controller:v1.0.0
+        ports:
+        - name: http
+          containerPort: 8080
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+      - name: kustomize-controller
+        image: ghcr.io/fluxcd/kustomize-controller:v1.0.0
+        ports:
+        - name: http
+          containerPort: 8080
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+      - name: helm-controller
+        image: ghcr.io/fluxcd/helm-controller:v0.35.0
+        ports:
+        - name: http
+          containerPort: 8080
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+---
+# GitRepository source for pulling manifests from Git
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: infrastructure
+  namespace: flux-system
+spec:
+  interval: 10m
+  url: https://github.com/riansaso/gcp-iac-gke
+  ref:
+    branch: main
+  secretRef:
+    name: flux-repo-auth
+---
+# Kustomization to apply manifests from GitRepository
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: infrastructure
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./gitops/infrastructure
+  sourceRef:
+    kind: GitRepository
+    name: infrastructure
+  prune: true
+  wait: true
+  postBuild:
+    substitute:
+      PROJECT_ID: YOUR_PROJECT_ID
+      REGION: us-central1

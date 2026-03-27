@@ -1,0 +1,83 @@
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+tfplan
+tfplan.json
+crash.log
+crash.*.log
+overlay.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+
+# Environment
+.env
+.env.local
+.env.*.local
+.envrc
+
+# Taskfile
+.task/
+task.yaml
+
+# Kubernetes
+kubeconfig
+kubeconfig-*
+.kubeconfig
+
+# Helm
+charts/
+*.tgz
+
+# General build artifacts
+dist/
+build/
+bin/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Cloud SDK
+gcloud/
+.gcloud/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+
+# Node
+node_modules/
+npm-debug.log
+
+# Local development
+.local/
+debug/
+cluster-debug/

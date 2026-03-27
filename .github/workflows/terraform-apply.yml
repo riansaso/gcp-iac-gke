@@ -1,0 +1,74 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infrastructure/**'
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  TF_VERSION: 1.7.0
+  GOOGLE_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GOOGLE_REGION: us-central1
+
+jobs:
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      # Uncomment to require manual approval for production changes
+      # approval_required: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Terraform Init
+        working-directory: infrastructure/gcp/environments/base
+        run: terraform init
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: infrastructure/gcp/environments/base
+        run: terraform plan -no-color
+
+      - name: Terraform Apply
+        working-directory: infrastructure/gcp/environments/base
+        run: terraform apply -auto-approve -no-color
+
+      - name: Get Outputs
+        id: output
+        working-directory: infrastructure/gcp/environments/base
+        run: |
+          GKE_CLUSTER=$(terraform output -raw gke_cluster_name)
+          echo "gke_cluster=$GKE_CLUSTER" >> $GITHUB_OUTPUT
+
+      - name: Post Success Comment
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Infrastructure deployed successfully! GKE cluster: `${{ steps.output.outputs.gke_cluster }}`'
+            });

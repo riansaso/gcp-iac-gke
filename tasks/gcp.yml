@@ -1,0 +1,116 @@
+version: '3'
+
+# GCP task group
+# Handles GCP-specific operations (APIs, regions, account information)
+
+tasks:
+  enable-apis:
+    desc: "Enable required GCP APIs"
+    cmds:
+      - echo "🔌 Enabling required GCP APIs..."
+      - gcloud services enable compute.googleapis.com container.googleapis.com servicenetworking.googleapis.com sqladmin.googleapis.com redis.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com iam.googleapis.com logging.googleapis.com monitoring.googleapis.com --project={{.PROJECT_ID}}
+      - echo "✓ APIs enabled"
+
+  list-regions:
+    desc: "List available GCP regions"
+    cmds:
+      - echo "📍 Available GCP Regions:"
+      - gcloud compute regions list --format="table(name,status)" --project={{.PROJECT_ID}}
+
+  list-regions-gke:
+    desc: "List GCP regions that support GKE"
+    cmds:
+      - echo "📍 GCP Regions with GKE Support:"
+      - gcloud compute zones list --filter="name:us-* OR name:europe-* OR name:asia-*" --format="table(name,region)" | head -30
+
+  account-info:
+    desc: "Show current GCP account information"
+    cmds:
+      - echo "👤 GCP Account Information:"
+      - gcloud auth list --filter="status:ACTIVE" --format="table(account)"
+      - echo ""
+      - echo "Current Project:"
+      - gcloud config get-value project
+      - echo ""
+      - echo "Account Email:"
+      - gcloud config get-value account
+      - echo ""
+      - echo "IAM Roles for current account:"
+      - gcloud projects get-iam-policy {{.PROJECT_ID}} --flatten="bindings[].members" --filter="bindings.members:$(gcloud config get-value account)" --format="table(bindings.role)"
+
+  list-clusters:
+    desc: "List all GKE clusters in the project"
+    cmds:
+      - echo "🎯 GKE Clusters:"
+      - gcloud container clusters list --project={{.PROJECT_ID}} --format="table(name,zone,status,machineType)"
+
+  list-instances:
+    desc: "List Compute Engine instances"
+    cmds:
+      - echo "💻 Compute Engine Instances:"
+      - gcloud compute instances list --project={{.PROJECT_ID}} --format="table(name,zone,machineType,STATUS)"
+
+  list-databases:
+    desc: "List Cloud SQL instances"
+    cmds:
+      - echo "🗄️  Cloud SQL Instances:"
+      - gcloud sql instances list --project={{.PROJECT_ID}} --format="table(name,databaseVersion,region,state)"
+
+  list-redis:
+    desc: "List Cloud Memorystore Redis instances"
+    cmds:
+      - echo "🔴 Redis Instances:"
+      - gcloud redis instances list --project={{.PROJECT_ID}} --format="table(name,region,tier,memorySizeGb,state)"
+
+  list-networks:
+    desc: "List VPC networks"
+    cmds:
+      - echo "🌐 VPC Networks:"
+      - gcloud compute networks list --project={{.PROJECT_ID}} --format="table(name,autoCreateSubnetworks,subnet_mode)"
+
+  quota-info:
+    desc: "Show GCP quota information"
+    cmds:
+      - echo "📊 GCP Quota Information:"
+      - gcloud compute project-info describe --project={{.PROJECT_ID}} --format="table(quotas)"
+
+  billing-info:
+    desc: "Show project billing information"
+    cmds:
+      - echo "💰 Billing Information:"
+      - gcloud billing projects describe {{.PROJECT_ID}} --format="table(billingAccountName,billingEnabled)"
+
+  create-secret:
+    desc: "Create a secret in Secret Manager (interactive)"
+    cmds:
+      - bash {{.ROOT_DIR}}/scripts/create-secret.sh
+
+  sync-artifact-registry:
+    desc: "Push container image to Artifact Registry"
+    cmds:
+      - echo "🐳 Artifact Registry Push"
+      - echo "Usage: task gcp:sync-artifact-registry -- --image gcr.io/project/image:tag --repo docker-repo"
+      - echo ""
+      - echo "Configure gcloud for Artifact Registry:"
+      - gcloud auth configure-docker {{.REGION | default "us-central1"}}-docker.pkg.dev --quiet
+
+  cleanup-old-images:
+    desc: "Delete old images from Artifact Registry (keep last 5)"
+    cmds:
+      - echo "🧹 Cleaning up old images..."
+      - echo "Requires additional configuration - see documentation"
+
+  config-show:
+    desc: "Show current gcloud configuration"
+    cmds:
+      - echo "⚙️  Current gcloud Configuration:"
+      - gcloud config list
+
+  config-set:
+    desc: "Set gcloud configuration"
+    cmds:
+      - echo "⚙️  Usage: task gcp:config-set -- --property=core/project --value=my-project"
+      - echo "Common properties:"
+      - echo "  core/project        - Default GCP project"
+      - echo "  compute/region      - Default region"
+      - echo "  compute/zone        - Default zone"

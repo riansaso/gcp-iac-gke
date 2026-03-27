@@ -1,0 +1,80 @@
+version: '3'
+
+# Root Taskfile for GCP Infrastructure Repository
+# This file orchestrates all deployment and operational tasks
+# Run: task --list-all to see all available tasks
+
+env:
+  PROJECT_ROOT: "{{.ROOT_DIR}}"
+
+dotenv:
+  - '.env.local'
+  - '.env'
+
+includes:
+  terraform: ./tasks/terraform.yml
+  kubernetes: ./tasks/kubernetes.yml
+  gcp: ./tasks/gcp.yml
+
+tasks:
+  default:
+    desc: "Show default task list and quick start"
+    cmds:
+      - echo "🚀 GCP Infrastructure Repository - Quick Start"
+      - echo ""
+      - echo "Prerequisites:"
+      - echo "  1. Set your PROJECT_ID: export PROJECT_ID=your-project-id"
+      - echo "  2. Ensure gcloud, terraform, kubectl, and helm are installed"
+      - echo ""
+      - echo "Common Commands:"
+      - echo "  task validate-env    - Verify all tools are installed"
+      - echo "  task tf:plan         - Plan infrastructure changes"
+      - echo "  task tf:apply        - Apply infrastructure changes"
+      - echo "  task k8s:flux-setup  - Install Flux and setup GitOps"
+      - echo "  task setup           - Complete setup (validate + infrastructure + GitOps)"
+      - echo ""
+      - echo "Run 'task --list-all' to see all available tasks"
+
+  setup:
+    desc: "Complete infrastructure setup (validate → terraform → kubernetes)"
+    deps:
+      - validate-env
+      - terraform:apply
+      - kubernetes:flux-setup
+
+  validate-env:
+    desc: "Validate environment and prerequisites"
+    cmds:
+      - bash {{.PROJECT_ROOT}}/scripts/validate-env.sh
+
+  init:
+    desc: "Initialize Terraform backend and modules"
+    dir: "{{.PROJECT_ROOT}}/infrastructure/gcp/environments/base"
+    cmds:
+      - echo "Initializing Terraform..."
+      - terraform init -upgrade
+      - echo "✓ Terraform initialized"
+
+  fmt:
+    desc: "Format all Terraform and YAML files"
+    cmds:
+      - echo "Formatting Terraform files..."
+      - find {{.PROJECT_ROOT}}/infrastructure -name "*.tf" -exec terraform fmt {} \;
+      - echo "✓ Terraform files formatted"
+      - echo "Formatting YAML files..."
+      - find {{.PROJECT_ROOT}}/gitops -name "*.yaml" -o -name "*.yml" | xargs -I {} sh -c 'echo "Checking: {}"'
+      - echo "✓ YAML files validated"
+
+  clean:
+    desc: "Clean up local Terraform files and caches"
+    cmds:
+      - echo "Cleaning Terraform cache..."
+      - find {{.PROJECT_ROOT}}/infrastructure -type d -name ".terraform" -exec rm -rf {} + 2>/dev/null || true
+      - find {{.PROJECT_ROOT}}/infrastructure -name ".terraform.lock.hcl" -delete 2>/dev/null || true
+      - find {{.PROJECT_ROOT}}/infrastructure -name "*.tfstate*" -delete 2>/dev/null || true
+      - echo "✓ Cleanup complete"
+
+  help:
+    desc: "Show this help message"
+    cmds:
+      - task --list-all

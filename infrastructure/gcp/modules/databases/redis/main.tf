@@ -37,12 +37,3 @@ resource "google_redis_instance" "primary" {
 
   depends_on = []
 }
-
-# Output for applications to connect to Redis
-output "redis_host" {
-  value = google_redis_instance.primary.host
-}
-
-output "redis_port" {
-  value = google_redis_instance.primary.port
-}

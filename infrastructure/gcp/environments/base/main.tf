@@ -44,7 +44,7 @@ resource "google_project_service" "required_apis" {
 # Networking Module
 # ==========================================
 module "networking" {
-  source = "../modules/networking"
+  source = "../../modules/networking"
 
   project_id        = var.project_id
   region            = var.region
@@ -62,7 +62,7 @@ module "networking" {
 # GKE Module
 # ==========================================
 module "gke" {
-  source = "../modules/gke"
+  source = "../../modules/gke"
 
   project_id                      = var.project_id
   region                          = var.region
@@ -86,7 +86,7 @@ module "gke" {
 # IAM Module
 # ==========================================
 module "iam" {
-  source = "../modules/iam"
+  source = "../../modules/iam"
 
   project_id                       = var.project_id
   cluster_workload_identity_pool   = module.gke.workload_identity_pool
@@ -106,7 +106,7 @@ module "iam" {
 # Databases Module (PostgreSQL)
 # ==========================================
 module "postgres" {
-  source = "../modules/databases"
+  source = "../../modules/databases"
 
   project_id                = var.project_id
   region                    = var.region
@@ -130,7 +130,7 @@ module "postgres" {
 # Redis Module
 # ==========================================
 module "redis" {
-  source = "../modules/databases/redis"
+  source = "../../modules/databases/redis"
 
   project_id         = var.project_id
   region             = var.region
@@ -148,7 +148,7 @@ module "redis" {
 # Artifact Registry Module
 # ==========================================
 module "artifact_registry" {
-  source = "../modules/artifact-registry"
+  source = "../../modules/artifact-registry"
 
   project_id           = var.project_id
   region               = var.region
@@ -165,7 +165,7 @@ module "artifact_registry" {
 # Secrets Manager Module
 # ==========================================
 module "secrets" {
-  source = "../modules/secrets"
+  source = "../../modules/secrets"
 
   project_id              = var.project_id
   create_example_secret   = true

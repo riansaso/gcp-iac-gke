@@ -18,6 +18,17 @@ terraform {
   # }
 }
 
+# Configure the Google Cloud Provider
+provider "google" {
+  project = var.project_id
+  region  = var.region
+}
+
+provider "google-beta" {
+  project = var.project_id
+  region  = var.region
+}
+
 # Enable required GCP APIs
 resource "google_project_service" "required_apis" {
   for_each = toset([
@@ -168,6 +179,7 @@ module "secrets" {
   source = "../../modules/secrets"
 
   project_id              = var.project_id
+  region                  = var.region
   create_example_secret   = true
   example_secret_name     = "${var.project_name}-db-url"
   labels                  = var.labels

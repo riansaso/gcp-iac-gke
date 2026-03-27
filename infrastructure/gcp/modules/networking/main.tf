@@ -18,8 +18,6 @@ resource "google_compute_network" "primary" {
   project                 = var.project_id
   auto_create_subnetworks = false
   routing_mode            = "REGIONAL"
-
-  labels = var.labels
 }
 
 # Primary Subnet for GKE nodes
@@ -42,17 +40,6 @@ resource "google_compute_subnetwork" "gke_nodes" {
 
   private_ip_google_access = var.enable_private_google_access
 
-  dynamic "log_config" {
-    for_each = var.enable_flow_logs ? [1] : []
-    content {
-      aggregation_interval = "INTERVAL_5_SEC"
-      flow_sampling        = 0.5
-      metadata             = "INCLUDE_ALL_METADATA"
-    }
-  }
-
-  labels = var.labels
-
   depends_on = [google_compute_network.primary]
 }
 
@@ -66,8 +53,6 @@ resource "google_compute_router" "nat_router" {
   bgp {
     asn = 64514
   }
-
-  labels = var.labels
 }
 
 # Cloud NAT for egress from private cluster
@@ -103,12 +88,9 @@ resource "google_compute_firewall" "allow_internal" {
   allow {
     protocol = "icmp"
   }
-
-  labels = var.labels
 }
 
 # IAP Firewall Rule - Allow Identity-Aware Proxy to connect
-# This restricts SSH and kubectl access to only authenticated users via IAP
 resource "google_compute_firewall" "allow_iap" {
   name      = "${var.vpc_name}-allow-iap"
   project   = var.project_id
@@ -124,8 +106,6 @@ resource "google_compute_firewall" "allow_iap" {
   }
 
   target_tags = ["iap-enabled"]
-
-  labels = var.labels
 }
 
 # Deny all egress by default (principle of least privilege)
@@ -141,8 +121,6 @@ resource "google_compute_firewall" "deny_all_egress" {
   deny {
     protocol = "all"
   }
-
-  labels = var.labels
 }
 
 # Allow egress to Google APIs and services (necessary for GKE)
@@ -158,8 +136,6 @@ resource "google_compute_firewall" "allow_google_apis" {
   allow {
     protocol = "tcp"
   }
-
-  labels = var.labels
 }
 
 # Allow DNS for private cluster
@@ -176,6 +152,4 @@ resource "google_compute_firewall" "allow_dns_egress" {
     protocol = "udp"
     ports    = ["53"]
   }
-
-  labels = var.labels
 }

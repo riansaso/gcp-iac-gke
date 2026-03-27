@@ -17,7 +17,6 @@ resource "google_service_account" "external_secrets" {
   account_id    = "external-secrets-sa"
   display_name  = "Service account for External Secrets Operator"
   project       = var.project_id
-  labels        = var.labels
 }
 
 # Allow ESO's Kubernetes SA to impersonate the GCP SA (Workload Identity Federation)
@@ -45,7 +44,6 @@ resource "google_service_account" "flux_system" {
   account_id    = "flux-system-sa"
   display_name  = "Service account for Flux GitOps"
   project       = var.project_id
-  labels        = var.labels
 }
 
 # Allow Flux's Kubernetes SA to impersonate the GCP SA
@@ -73,7 +71,6 @@ resource "google_service_account" "app_sa" {
   account_id    = "demo-app-sa"
   display_name  = "Service account for demo application"
   project       = var.project_id
-  labels        = var.labels
 }
 
 # Allow app's Kubernetes SA to impersonate the GCP SA

@@ -43,12 +43,12 @@ variable "memory_size_gb" {
 
 variable "tier" {
   type        = string
-  description = "Service tier (STANDARD or PREMIUM)"
-  default     = "STANDARD"
+  description = "Service tier (BASIC or STANDARD_HA)"
+  default     = "BASIC"
 
   validation {
-    condition     = contains(["STANDARD", "PREMIUM"], var.tier)
-    error_message = "Tier must be STANDARD or PREMIUM."
+    condition     = contains(["BASIC", "STANDARD_HA"], var.tier)
+    error_message = "Tier must be BASIC or STANDARD_HA."
   }
 }
 

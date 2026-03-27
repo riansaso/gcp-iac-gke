@@ -3,6 +3,11 @@ variable "project_id" {
   description = "GCP Project ID"
 }
 
+variable "region" {
+  type        = string
+  description = "GCP region for secret replication"
+}
+
 variable "create_example_secret" {
   type        = bool
   description = "Create example secret for reference"

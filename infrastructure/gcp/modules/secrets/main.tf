@@ -13,25 +13,27 @@ terraform {
 
 # Example secret for demonstration
 resource "google_secret_manager_secret" "example" {
-  count      = var.create_example_secret ? 1 : 0
-  secret_id  = var.example_secret_name
-  project    = var.project_id
-  labels     = var.labels
+  count     = var.create_example_secret ? 1 : 0
+  secret_id = var.example_secret_name
+  project   = var.project_id
 
   replication {
-    automatic = true
+    user_managed {
+      replicas {
+        location = var.region
+      }
+    }
   }
 }
 
-# Placeholder secret version (in practice, use `gcloud secrets versions add` or Terraform data sources)
+# Placeholder secret version
 resource "google_secret_manager_secret_version" "example" {
-  count              = var.create_example_secret ? 1 : 0
-  secret             = google_secret_manager_secret.example[0].id
-  secret_data        = "placeholder-value-replace-with-actual-secret"  # Change this!
-  deletion_window    = 336  # 2 weeks retention
+  count       = var.create_example_secret ? 1 : 0
+  secret      = google_secret_manager_secret.example[0].id
+  secret_data = "placeholder-value-replace-with-actual-secret"
 }
 
-# Set up IAM policy for secret access (examples)
+# IAM policy for secret access
 resource "google_secret_manager_secret_iam_member" "example_accessor" {
   count     = var.create_example_secret ? 1 : 0
   secret_id = google_secret_manager_secret.example[0].id

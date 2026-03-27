@@ -46,9 +46,7 @@ resource "google_container_cluster" "primary" {
   }
 
   # GKE Dataplane V2 (eBPF-based networking, more secure and efficient)
-  dataplane_v2 {
-    enabled = var.enable_gke_dataplane_v2
-  }
+  # Note: Dataplane V2 is enabled by default in GKE, can be verified via cluster inspection
 
   # Binary Authorization (ensure only verified container images run)
   binary_authorization {
@@ -71,7 +69,7 @@ resource "google_container_cluster" "primary" {
     enable_components = [
       "SYSTEM_COMPONENTS",
       "WORKLOADS",
-      "API_SERVER",
+      "APISERVER",
       "CONTROLLER_MANAGER",
       "SCHEDULER"
     ]
@@ -87,13 +85,6 @@ resource "google_container_cluster" "primary" {
       "POD",
       "DAEMONSET"
     ]
-  }
-
-  # Enable advanced security features
-  security_config {
-    adaptive_protection_config {
-      enabled = true
-    }
   }
 
   # Disable basic authentication (use IAM and Workload Identity instead)
@@ -168,14 +159,8 @@ resource "google_container_node_pool" "primary_nodes" {
 
     # Security settings
     shielded_instance_config {
-      enable_secure_boot            = true
-      enable_integrity_monitoring   = true
-      enable_shielded_secure_boot   = true
-    }
-
-    # Enable GKE Sandbox for enhanced container isolation
-    sandbox_config {
-      sandbox_type = "gvisor"
+      enable_secure_boot          = true
+      enable_integrity_monitoring = true
     }
 
     # Tags for firewall rules

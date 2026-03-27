@@ -2,7 +2,7 @@
 # IMPORTANT: Replace pj-gcp-mvp1 with your actual GCP project ID
 project_id   = "pj-gcp-mvp1"
 region       = "us-central1"
-project_name = "Testia"
+project_name = "testia"
 
 # Networking Configuration
 vpc_primary_cidr = "10.0.0.0/16"
@@ -27,7 +27,7 @@ postgres_database_name = "application"
 # Redis Configuration
 redis_version         = "7.0"
 redis_memory_size_gb  = 1
-redis_tier            = "STANDARD"
+redis_tier            = "BASIC"
 
 # Labels
 labels = {

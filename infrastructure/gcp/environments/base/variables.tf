@@ -180,12 +180,12 @@ variable "redis_memory_size_gb" {
 
 variable "redis_tier" {
   type        = string
-  description = "Redis service tier (STANDARD or PREMIUM)"
-  default     = "STANDARD"
+  description = "Redis service tier (BASIC or STANDARD_HA)"
+  default     = "BASIC"
 
   validation {
-    condition     = contains(["STANDARD", "PREMIUM"], var.redis_tier)
-    error_message = "Must be STANDARD or PREMIUM."
+    condition     = contains(["BASIC", "STANDARD_HA"], var.redis_tier)
+    error_message = "Must be BASIC or STANDARD_HA."
   }
 }
 

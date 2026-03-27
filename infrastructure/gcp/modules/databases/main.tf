@@ -113,7 +113,7 @@ resource "google_sql_database" "app_db" {
 
 # Create application user with IAM authentication
 resource "google_sql_user" "app_user" {
-  count       = var.create_app_user && var.app_user_email != "" ? 1 : 0
+  count       = var.create_app_user ? 1 : 0
   name        = var.app_user_email
   instance    = google_sql_database_instance.postgres.name
   type        = "CLOUD_IAM_SERVICE_ACCOUNT"

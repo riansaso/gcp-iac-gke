@@ -140,20 +140,20 @@ module "postgres" {
 # ==========================================
 # Redis Module
 # ==========================================
-module "redis" {
-  source = "../../modules/databases/redis"
+# module "redis" {
+#   source = "../../modules/databases/redis"
 
-  project_id         = var.project_id
-  region             = var.region
-  redis_instance_name = "${var.project_name}-redis"
-  redis_version      = var.redis_version
-  memory_size_gb     = var.redis_memory_size_gb
-  tier               = var.redis_tier
-  vpc_network        = module.networking.vpc_name
-  labels             = var.labels
+#   project_id         = var.project_id
+#   region             = var.region
+#   redis_instance_name = "${var.project_name}-redis"
+#   redis_version      = var.redis_version
+#   memory_size_gb     = var.redis_memory_size_gb
+#   tier               = var.redis_tier
+#   vpc_network        = module.networking.vpc_name
+#   labels             = var.labels
 
-  depends_on = [module.networking, google_project_service.required_apis]
-}
+#   depends_on = [module.networking, google_project_service.required_apis]
+# }
 
 # ==========================================
 # Artifact Registry Module

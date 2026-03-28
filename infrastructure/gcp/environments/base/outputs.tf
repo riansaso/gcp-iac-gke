@@ -29,15 +29,15 @@ output "postgres_private_ip" {
   description = "PostgreSQL private IP address"
 }
 
-output "redis_host" {
-  value       = module.redis.redis_host
-  description = "Redis instance host"
-}
+# output "redis_host" {
+#   value       = module.redis.redis_host
+#   description = "Redis instance host"
+# }
 
-output "redis_port" {
-  value       = module.redis.redis_port
-  description = "Redis instance port"
-}
+# output "redis_port" {
+#   value       = module.redis.redis_port
+#   description = "Redis instance port"
+# }
 
 output "docker_repo_url" {
   value       = module.artifact_registry.docker_repository_url

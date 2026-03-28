@@ -161,33 +161,33 @@ variable "postgres_database_name" {
 # ==========================================
 # Redis Variables
 # ==========================================
-variable "redis_version" {
-  type        = string
-  description = "Redis version"
-  default     = "7.0"
-}
+# variable "redis_version" {
+#   type        = string
+#   description = "Redis version"
+#   default     = "7.0"
+# }
 
-variable "redis_memory_size_gb" {
-  type        = number
-  description = "Redis memory size in GB"
-  default     = 1
+# variable "redis_memory_size_gb" {
+#   type        = number
+#   description = "Redis memory size in GB"
+#   default     = 1
 
-  validation {
-    condition     = var.redis_memory_size_gb >= 1 && var.redis_memory_size_gb <= 300
-    error_message = "Memory size must be between 1 and 300 GB."
-  }
-}
+#   validation {
+#     condition     = var.redis_memory_size_gb >= 1 && var.redis_memory_size_gb <= 300
+#     error_message = "Memory size must be between 1 and 300 GB."
+#   }
+# }
 
-variable "redis_tier" {
-  type        = string
-  description = "Redis service tier (BASIC or STANDARD_HA)"
-  default     = "BASIC"
+# variable "redis_tier" {
+#   type        = string
+#   description = "Redis service tier (BASIC or STANDARD_HA)"
+#   default     = "BASIC"
 
-  validation {
-    condition     = contains(["BASIC", "STANDARD_HA"], var.redis_tier)
-    error_message = "Must be BASIC or STANDARD_HA."
-  }
-}
+#   validation {
+#     condition     = contains(["BASIC", "STANDARD_HA"], var.redis_tier)
+#     error_message = "Must be BASIC or STANDARD_HA."
+#   }
+#}
 
 # ==========================================
 # Labels

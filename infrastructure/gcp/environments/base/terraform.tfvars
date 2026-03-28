@@ -34,5 +34,5 @@ labels = {
   environment = "production"
   managed_by  = "terraform"
   project     = "gcp-iac-gke"
-  created_at  = "2026-03-26"
+  created_at  = "2026-03-28"
 }

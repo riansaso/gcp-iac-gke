@@ -24,7 +24,7 @@ resource "google_container_cluster" "primary" {
 
   # Disable default node pool, we'll create a custom one
   remove_default_node_pool = true
-  initial_node_count       = 1
+  initial_node_count       = 2
 
   # VPC-native cluster with custom IP ranges
   ip_allocation_policy {
